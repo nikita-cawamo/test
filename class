@@ -1,0 +1,138 @@
+import React from 'react'
+import Slide from '@material-ui/core/Slide';
+import { cwRed, cwGrey, cwGrey2 } from '../config/colors';
+import * as AlertActions from '../actions/alert';
+import * as FalseAlertReportOptionsActions from '../actions/falseAlertReportOptions';
+import { connect } from 'react-redux';
+import wrapActionCreators from '../utils/wrapActionCreators';
+import CWVideo from './CWVideo';
+import MediaQuery from 'react-responsive';
+import { withStyles } from '@material-ui/core/styles';
+import AlertRedFrame from './AlertRedFrame';
+import CWFab from './CWFab';
+import Icon from '@material-ui/core/Icon';
+import Tc from 'components/Tc';
+import Tu from 'components/Tu';
+
+function Transition(props) {
+    return <Slide direction="up" {...props} />;
+}
+
+const styles = theme => ({
+    colorPrimary: {
+        color: cwGrey
+    },
+    root: {
+        background: cwRed,
+    },
+    appBar2: {
+        background: cwGrey,
+    },
+    heading: {
+        fontSize: 18,
+        flexBasis: '33.33%',
+        flexShrink: 0,
+    },
+    secondaryHeading: {
+        fontSize: 18,
+        color: cwRed,
+    },
+    alertImage: {
+        flexBasis: '70%'
+    },
+    alertConfidance: {
+        flexBasis: '30%',
+        color: cwRed
+    },
+    chip: {
+        margin: theme.spacing.unit,
+    },
+})
+
+class OperatorAlert extends React.Component {
+    state = {
+    }
+    render() {
+        const showAlertVideo = (alert, maxWidth, idx) => {
+            if (!alert.moreVideoUrl && !alert.preAlertUrl)
+                return <div style={{ width: '100%', maxWidth, display: 'inline-block', verticalAlign: 'top' }}>
+                    <div style={{
+                    }}><div style={{ textAlign: 'center' }}><Tc>alert.mediainprocess</Tc><br />
+                            <CWFab
+                                style={{ width: 70, height: 70 }}
+                                onClick={() => this.props.fetchAlertAssets(idx)}>
+                                <Tc>alert.tryagain</Tc>
+                            </CWFab>
+                        </div>
+                    </div>
+                </div>
+            return <div style={{
+                width: '100%', maxWidth, display: 'inline-block', justifyContent: 'space-around',
+                alignItems: 'center'
+            }}>
+                <div style={{
+                    height: 234,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    fontSize: 0
+                }}>
+                    {alert.moreVideoUrl && <CWFab
+                            onClick={() => this.setState(state => ({ [alert._id]: !state[alert._id] }))}
+                            style={{
+                                position: 'absolute',
+                                top: 10,
+                                left: 10,
+                                fontSize: 10,
+                                zIndex: 9999
+                            }}>
+                            {
+                                this.state[alert._id] ? <Icon>keyboard_arrow_left</Icon> : <Tu>alert.more</Tu>
+                            }
+                        </CWFab>}
+                    <CWVideo
+                        poster={alert.imageUrl}
+                        style={{
+                            height: '100%',
+                            width: '100%'
+                        }}
+                        preload="true"
+                        src={this.state[alert._id] ? alert.moreVideoUrl : alert.preAlertUrl} />
+                </div>
+            </div>
+        }
+
+        return (
+            <>
+                {
+                    this.props.alertData.map((alert, idx) => {
+                        return <div style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-around',
+                            alignItems: 'center',
+                        }}>
+                            <MediaQuery query="(min-width: 700px)" style={{ width: '100%', maxWidth: 830 }}>
+
+                                <div style={{ fontSize: 0, width: '100%', maxWidth: 415, position: 'relative', display: 'inline-block' }}>
+                                    <img src={alert.imageUrl} alt='img' style={{
+                                        height: 234,
+                                        width: '100%'
+                                    }} />
+                                    <AlertRedFrame image={alert.imageUrl} alert={alert} />
+                                </div>
+                                {
+                                    showAlertVideo(alert, 415, this.props.indexAlert)
+                                }
+                            </MediaQuery>
+                        </div >
+                    })
+                }
+            </>
+        )
+    }
+}
+export default connect(state => ({
+    login: state.login,
+    alert: state.alert,
+    serviceMap: state.serviceMap,
+    dateFormat: (state.login && state.login.user && (state.login.user.clientDateFormat || state.login.user.resellerDateFormat)) || 'DD, MMM'
+}), wrapActionCreators({ ...AlertActions, ...FalseAlertReportOptionsActions }))(withStyles(styles)(OperatorAlert));
